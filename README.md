@@ -65,8 +65,8 @@ Interview Topics
 | Structural Causal Model | DAG | Graphical causal structure |
 | Structural Causal Model | do-operator | Intervention distribution |
 | Structural Causal Model | do-calculus | Identification rules |
-| SCM | Backdoor criterion | Adjustment for confounding |
-| SCM | Frontdoor criterion | Identification via mediators |
+| Structural Causal Model | Backdoor criterion | Adjustment for confounding |
+| Structural Causal Model | Frontdoor criterion | Identification via mediators |
 
 ---
 
