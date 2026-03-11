@@ -90,175 +90,122 @@ Regression / Matching / IPW
 
 # Causal Identification Methods
 
-## Backdoor Adjustment
-**Identifies:** ATE (or ATT / CATE depending on weighting)
-
-If a set of covariates $Z$ blocks all backdoor paths between treatment $X$ and outcome $Y$:
-
-$$ATE =
-\mathbb{E}_Z
-\left[
-\mathbb{E}[Y \mid X=1, Z]$$
-
-**Key assumption**
-```
-Conditional exchangeability
-(Y(1),Y(0)) ⟂ X | Z
-```
-
-**Common implementations**
-- Regression adjustment
-- Matching
-- Propensity score weighting
-- Double Machine Learning (DML)
+## Table of Contents
+- [Backdoor Adjustment](#backdoor-adjustment)
+- [Propensity Score Methods (IPW)](#propensity-score-methods)
+- [Instrumental Variables (IV)](#instrumental-variables)
+- [Difference-in-Differences (DiD)](#difference-in-differences-did)
+- [Regression Discontinuity (RD)](#regression-discontinuity-rd)
+- [Mediation Analysis](#mediation-analysis)
+- [Off-Policy Evaluation (OPE)](#off-policy-evaluation)
 
 ---
-# Propensity Score Methods
 
-## Inverse Propensity Weighting (IPW)
+## Backdoor Adjustment
+**Identifies:** ATE (Average Treatment Effect)
+
+If a set of covariates $Z$ satisfies the backdoor criterion (blocking all non-causal paths between treatment $D$ and outcome $Y$):
+
+$$ATE = \mathbb{E}_Z [ \mathbb{E}[Y \mid D=1, Z] - \mathbb{E}[Y \mid D=0, Z] ]$$
+
+**Key Assumption**
+> **Conditional Exchangeability (Unconfoundedness)**
+> $$(Y(1), Y(0)) \perp D \mid Z$$
+
+**Common Implementations**
+* **Regression Adjustment:** Modeling $Y = f(D, Z)$.
+* **Matching:** Grouping similar units based on $Z$.
+* **Double Machine Learning (DML):** Using ML to partial out the effects of $Z$ from both $D$ and $Y$.
+
+---
+
+## Propensity Score Methods
+
+### Inverse Propensity Weighting (IPW)
 **Identifies:** ATE
 
-$$
-ATE =
-\mathbb{E}
-\left[
-\frac{D Y}{e(X)}
--
-\frac{(1-D)Y}{1-e(X)}
-\right]
-$$
+$$ATE = \mathbb{E} \left[ \frac{D Y}{e(Z)} - \frac{(1-D)Y}{1-e(Z)} \right]$$
 
-Where the **propensity score** is
+Where the **Propensity Score** is:
+$$e(Z) = P(D=1 \mid Z)$$
 
-$$
-e(X) = P(D=1 \mid X)
-$$
-
-**Idea**
-
-Reweight observations to simulate a randomized experiment.
+**Core Idea**
+Reweight observations to create a pseudo-population where the treatment assignment is independent of covariates, simulating a randomized experiment.
 
 ---
-# Instrumental Variables
-## Wald Estimator (Binary Instrument)
+
+## Instrumental Variables
+### Wald Estimator (Binary Instrument)
 **Identifies:** LATE (Local Average Treatment Effect)
 
-$$
-LATE =
-\frac{\mathbb{E}[Y \mid Z=1] - \mathbb{E}[Y \mid Z=0]}
-{\mathbb{E}[D \mid Z=1] - \mathbb{E}[D \mid Z=0]}
-$$
+$$LATE = \frac{\mathbb{E}[Y \mid Z=1] - \mathbb{E}[Y \mid Z=0]}{\mathbb{E}[D \mid Z=1] - \mathbb{E}[D \mid Z=0]}$$
 
-Where
+* $Z$: Instrument (assignment)
+* $D$: Treatment (actual uptake)
 
-- $Z$ = instrument
-- $D$ = treatment
+**Key Assumptions**
+1.  **Relevance:** $Z$ has a causal effect on $D$.
+2.  **Exclusion Restriction:** $Z$ affects $Y$ *only* through $D$.
+3.  **Monotonicity:** No "defiers" (people who do the opposite of their assignment).
 
-**Key assumptions**
-
-- Relevance  
-- Exclusion restriction  
-- Monotonicity  
-
-Interpretation:
-
-Effect for **compliers**.
+**Interpretation**
+The effect for **Compliers** (those who take the treatment if and only if they are assigned to it).
 
 ---
 
-# Difference-in-Differences (DiD)
-**Identifies:** ATT
+## Difference-in-Differences (DiD)
+**Identifies:** ATT (Average Treatment Effect on the Treated)
 
-$$
-ATT =
-(Y_{T,post} - Y_{T,pre})
--
-(Y_{C,post} - Y_{C,pre})
-$$
+$$ATT = (Y_{T, \text{post}} - Y_{T, \text{pre}}) - (Y_{C, \text{post}} - Y_{C, \text{pre}})$$
 
-**Key assumption**
-
-```
-Parallel trends
-```
-The treated and control groups would follow the same trend without treatment.
+**Key Assumption**
+> **Parallel Trends**
+> In the absence of treatment, the average outcomes for the treated and control groups would have followed the same trend over time.
 
 ---
 
-# Regression Discontinuity (RD)
-**Identifies:** Local ATE at cutoff
+## Regression Discontinuity (RD)
+**Identifies:** Local ATE at the cutoff
 
-Treatment assignment determined by threshold $c$.
+Treatment assignment is determined by whether a running variable $X$ crosses a threshold $c$.
 
-$$
-\tau =
-\lim_{x \downarrow c} E[Y|X=x]
--
-\lim_{x \uparrow c} E[Y|X=x]
-$$
+$$\tau_{RD} = \lim_{x \downarrow c} \mathbb{E}[Y \mid X=x] - \lim_{x \uparrow c} \mathbb{E}[Y \mid X=x]$$
 
-Interpretation:
-
-Effect for units **near the cutoff**.
+**Interpretation**
+The causal effect for units **near the cutoff**. It is often considered the most internally valid quasi-experimental method.
 
 ---
 
-# Mediation Analysis
-**Identifies:** Direct and Indirect causal effects
+## Mediation Analysis
+**Identifies:** Direct and Indirect Causal Effects
 
-Total effect:
+**Total Effect (TE) Decomposition:**
+$$TE = \mathbb{E}[Y(1) - Y(0)] = DE + IE$$
 
-$$
-TE = \mathbb{E}[Y(1) - Y(0)]
-$$
+* **DE (Direct Effect):** Effect of treatment on outcome holding the mediator constant.
+* **IE (Indirect Effect):** Effect of treatment on outcome through the mediator $M$.
 
-Effect decomposition:
+**Causal Pathway Example**
+`Feature Launch → User Engagement (M) → Retention (Y)`
 
-$$
-TE = DE + IE
-$$
-
-Where
-
-- **DE** = Direct Effect
-- **IE** = Indirect (mediated) Effect
-
-Example causal pathway:
-```
-Recommendation → Click → Purchase
-```
-
-Used for:
-
-- product funnel analysis
-- mechanism understanding
-- attribution modeling
+**Use Cases**
+* Understanding *why* a product change worked.
+* Attribution modeling.
+* Identifying bottlenecks in a conversion funnel.
 
 ---
 
-# Off-Policy Evaluation
-## Inverse Propensity Scoring (IPS)
+## Off-Policy Evaluation
+### Inverse Propensity Scoring (IPS)
 
-**Identifies:** Policy value
+**Identifies:** Expected value of a new policy $V(\pi)$
 
-$$
-V(\pi)
-=
-\mathbb{E}
-\left[
-\frac{\pi(A|X)}{b(A|X)} Y
-\right]
-$$
+$$V(\pi) = \mathbb{E}_{n} \left[ \frac{\pi(A \mid X)}{b(A \mid X)} Y \right]$$
 
-Where
+* $b(A \mid X)$: Behavior Policy (the old policy that collected the data).
+* $\pi(A \mid X)$: Target Policy (the new policy we want to evaluate).
 
-- $b(A|X)$ = behavior policy
-- $\pi(A|X)$ = target policy
-
-Used in:
-
-- recommender systems
-- reinforcement learning
-- counterfactual policy evaluation
-```
+**Use Cases**
+* **Recommender Systems:** Estimating the revenue of a new ranking algorithm using historical logs.
+* **Reinforcement Learning:** Counterfactual evaluation without re-running live experiments.
 
