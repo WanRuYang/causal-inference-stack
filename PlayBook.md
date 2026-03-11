@@ -6,6 +6,7 @@ RCT → ATE
 DiD → ATT
 IV → LATE
 Uplift → CATE
+Synthetic Control → ATT
 ```
 
 # Strategic Decision Matrix
@@ -33,7 +34,6 @@ Uplift → CATE
 | **CATE** | $CATE(x) = \mathbb{E}[Y(1) - Y(0) \mid X=x]$ | Conditional Treatment Effect by subgroup | personalization / targeting |
 | **LATE** | $LATE = \mathbb{E}[Y(1)-Y(0) \mid \text{Compliers}]$ | Local treatment effect for compliers | Instrumental Variables |
 | **Policy Value** | $V(\pi)=\mathbb{E}[Y(\pi(X))]$ | Expected outcome under decision policy | recommendation / RL |
-
 
 
 # Limitations
@@ -86,3 +86,184 @@ Backdoor Adjustment
     ↓
 Regression / Matching / IPW
 ```
+
+
+# Causal Identification Methods
+
+## Backdoor Adjustment
+**Identifies:** ATE (or ATT / CATE depending on weighting)
+
+If a set of covariates $Z$ blocks all backdoor paths between treatment $X$ and outcome $Y$:
+
+$$
+ATE =
+\mathbb{E}_Z
+\left[
+\mathbb{E}[Y \mid X=1, Z]
+-
+\mathbb{E}[Y \mid X=0, Z]
+\right]
+$$
+
+**Key assumption**
+```
+Conditional exchangeability
+(Y(1),Y(0)) ⟂ X | Z
+```
+
+**Common implementations**
+- Regression adjustment
+- Matching
+- Propensity score weighting
+- Double Machine Learning (DML)
+
+---
+# Propensity Score Methods
+
+## Inverse Propensity Weighting (IPW)
+**Identifies:** ATE
+
+$$
+ATE =
+\mathbb{E}
+\left[
+\frac{D Y}{e(X)}
+-
+\frac{(1-D)Y}{1-e(X)}
+\right]
+$$
+
+Where the **propensity score** is
+
+$$
+e(X) = P(D=1 \mid X)
+$$
+
+**Idea**
+
+Reweight observations to simulate a randomized experiment.
+
+---
+# Instrumental Variables
+## Wald Estimator (Binary Instrument)
+**Identifies:** LATE (Local Average Treatment Effect)
+
+$$
+LATE =
+\frac{\mathbb{E}[Y \mid Z=1] - \mathbb{E}[Y \mid Z=0]}
+{\mathbb{E}[D \mid Z=1] - \mathbb{E}[D \mid Z=0]}
+$$
+
+Where
+
+- $Z$ = instrument
+- $D$ = treatment
+
+**Key assumptions**
+
+- Relevance  
+- Exclusion restriction  
+- Monotonicity  
+
+Interpretation:
+
+Effect for **compliers**.
+
+---
+
+# Difference-in-Differences (DiD)
+**Identifies:** ATT
+
+$$
+ATT =
+(Y_{T,post} - Y_{T,pre})
+-
+(Y_{C,post} - Y_{C,pre})
+$$
+
+**Key assumption**
+
+```
+Parallel trends
+```
+The treated and control groups would follow the same trend without treatment.
+
+---
+
+# Regression Discontinuity (RD)
+**Identifies:** Local ATE at cutoff
+
+Treatment assignment determined by threshold $c$.
+
+$$
+\tau =
+\lim_{x \downarrow c} E[Y|X=x]
+-
+\lim_{x \uparrow c} E[Y|X=x]
+$$
+
+Interpretation:
+
+Effect for units **near the cutoff**.
+
+---
+
+# Mediation Analysis
+**Identifies:** Direct and Indirect causal effects
+
+Total effect:
+
+$$
+TE = \mathbb{E}[Y(1) - Y(0)]
+$$
+
+Effect decomposition:
+
+$$
+TE = DE + IE
+$$
+
+Where
+
+- **DE** = Direct Effect
+- **IE** = Indirect (mediated) Effect
+
+Example causal pathway:
+```
+Recommendation → Click → Purchase
+```
+
+Used for:
+
+- product funnel analysis
+- mechanism understanding
+- attribution modeling
+
+---
+
+# Off-Policy Evaluation
+## Inverse Propensity Scoring (IPS)
+
+**Identifies:** Policy value
+
+$$
+V(\pi)
+=
+\mathbb{E}
+\left[
+\frac{\pi(A|X)}{b(A|X)} Y
+\right]
+$$
+
+Where
+
+- $b(A|X)$ = behavior policy
+- $\pi(A|X)$ = target policy
+
+Used in:
+
+- recommender systems
+- reinforcement learning
+- counterfactual policy evaluation
+```
+
