@@ -95,15 +95,10 @@ Regression / Matching / IPW
 
 If a set of covariates $Z$ blocks all backdoor paths between treatment $X$ and outcome $Y$:
 
-$$
-ATE =
+$$ATE =
 \mathbb{E}_Z
 \left[
-\mathbb{E}[Y \mid X=1, Z]
--
-\mathbb{E}[Y \mid X=0, Z]
-\right]
-$$
+\mathbb{E}[Y \mid X=1, Z]$$
 
 **Key assumption**
 ```
